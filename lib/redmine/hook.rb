@@ -26,18 +26,22 @@ module Redmine
       # Automatically called when a class inherits from Redmine::Hook::Listener.
       def add_listener(klass)
         raise "Hooks must include Singleton module." unless klass.included_modules.include?(Singleton)
+        # avoid a duplicated listener
+        @@listener_classes.delete_if {|listener| listener.name == klass.name}
         @@listener_classes << klass
-        clear_listeners_instances
+        clear_listeners_instances 
       end
 
       # Returns all the listener instances.
       def listeners
-        @@listeners ||= @@listener_classes.collect {|listener| listener.instance}
+        # no cache as a class source code can be changed. Reload class in development mode.
+        @@listener_classes.collect {|listener| ActiveSupport::Dependencies.constantize(listener.name).instance}
       end
 
       # Returns the listener instances for the given hook.
       def hook_listeners(hook)
-        @@hook_listeners[hook] ||= listeners.select {|listener| listener.respond_to?(hook)}
+        # no cache as a class source code can change.
+        listeners.select {|listener| listener.respond_to?(hook)}
       end
 
       # Clears all the listeners.
