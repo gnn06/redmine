@@ -40,4 +40,5 @@
 /.bundle
 /Gemfile.lock
 /Gemfile.local
+/Gemfile.lock.mysql2
 
